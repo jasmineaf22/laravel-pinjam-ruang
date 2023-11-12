@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
+use function Ramsey\Uuid\v1;
 
 class AuthController extends Controller
 {
@@ -17,7 +18,7 @@ class AuthController extends Controller
         return view('register');
     }
 
-    public function newRegister(Request $request)
+    public function newRegister(Request $requestt)
     
 {
     // $request->validate([
@@ -30,47 +31,38 @@ class AuthController extends Controller
     // ]);
 
     Mahasiswa::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'nim' => $request->nim,
-        'no_hp' => $request->no_hp,
-        'id_jurusan' => $request->id_jurusan,
-        'password' => $request->password,
+        'name' => $requestt->name,
+        'email' => $requestt->email,
+        'nim' => $requestt->nim,
+        'no_hp' => $requestt->no_hp,
+        'id_jurusan' => $requestt->id_jurusan,
+        'password' => bcrypt($requestt->password),
         'remember_token' => Str::random(60)
     ]);
 
-    return redirect()->route('login');
+    return redirect('/login');
 }
 
+public function login(){
+    return view('login');
+}
 
-    public function login()
-    {
-        return view('login');
-    }
-
-    public function newLogin(Request $request)
+public function newLogin(Request $request)
 {
-    try {
-        $user = Mahasiswa::where('email', $request->email)->first();
+    $request->validate([
+        'email' => 'required|email:dns',
+        'password' => 'required|min:6'
+    ]);
 
-        if (!$user) {
-            dd('User not found');
-            return redirect()->route('login')->with('fail', 'User not found!');
-        }
-        dd('failed to login', 'Stored Password:', $user->password, 'Entered Password:', $request->password);
+    $credentials = $request->only('email', 'password');
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
 
-        // Continue with your existing logic...
-    } catch (\Exception $e) {
-        dd($e->getMessage());
-        return redirect()->route('login')->with('fail', 'An error occurred during login.');
+        return view('/alur');
     }
-}
 
+    return back()->with('loginError', 'Login failed!');
+}}
 
-
-
-
-}
-
-    
+?>
 
